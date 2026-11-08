@@ -4,7 +4,7 @@ import { useOutletContext } from 'react-router-dom';
 import reportService from '../services/reportService.js';
 import readingService from '../services/readingService.js';
 import { getTodayString, formatDisplayDate, getSlotBadgeColor, getGlucoseStatus } from '../utils/dateUtils.js';
-import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/Card.jsx';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '../components/ui/Card.jsx';
 import Button from '../components/ui/Button.jsx';
 import Badge from '../components/ui/Badge.jsx';
 import EmptyState from '../components/ui/EmptyState.jsx';

@@ -2,6 +2,7 @@ import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext.jsx';
 import { Toaster } from 'sonner';
+import ErrorBoundary from './components/ui/ErrorBoundary.jsx';
 
 // Layouts
 import DashboardLayout from './layouts/DashboardLayout.jsx';
@@ -62,10 +63,11 @@ const PublicRoute = ({ children }) => {
 
 export const App = () => {
   return (
-    <BrowserRouter>
-      <AuthProvider>
-        <Toaster position="top-right" richColors closeButton expand={false} />
-        <Routes>
+    <ErrorBoundary>
+      <BrowserRouter>
+        <AuthProvider>
+          <Toaster position="top-right" richColors closeButton expand={false} />
+          <Routes>
           {/* Public Authentication Routes */}
           <Route
             element={
@@ -102,7 +104,8 @@ export const App = () => {
         </Routes>
       </AuthProvider>
     </BrowserRouter>
-  );
+  </ErrorBoundary>
+);
 };
 
 export default App;
