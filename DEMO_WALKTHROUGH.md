@@ -97,3 +97,4 @@
 | `1:40` | Month-to-Date & Previous-Month Reports | 1st to date range & prior calendar month retrospective |
 | `2:00` | Readings Filtering & Pagination | Filter by date/slot, pagination, edit & delete |
 | `2:20` | Security & Automated Tests | Strict user isolation, bcrypt, PostgreSQL, 35/35 tests |
+
