@@ -243,3 +243,4 @@ export const DailyReportPage = () => {
 };
 
 export default DailyReportPage;
+

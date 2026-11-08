@@ -297,3 +297,4 @@ npm run start
 ## 📄 License
 Developed for the Kenpath Technical Hiring Assignment.
 All rights reserved © 2026 SWEETY.
+

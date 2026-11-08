@@ -34,3 +34,4 @@ model Reading {
   @@index([userId])
   @@map("readings")
 }
+

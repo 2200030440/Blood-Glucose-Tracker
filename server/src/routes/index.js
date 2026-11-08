@@ -12,3 +12,4 @@ apiRouter.use('/reports', reportRoutes);
 apiRouter.use('/health', healthRoutes);
 
 export default apiRouter;
+

@@ -25,3 +25,4 @@ router.put('/:id', validate(updateReadingSchema), update);
 router.delete('/:id', remove);
 
 export default router;
+

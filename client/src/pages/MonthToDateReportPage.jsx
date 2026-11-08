@@ -317,3 +317,4 @@ export const MonthToDateReportPage = () => {
 };
 
 export default MonthToDateReportPage;
+

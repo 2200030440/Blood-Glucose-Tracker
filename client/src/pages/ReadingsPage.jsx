@@ -26,6 +26,10 @@ export const ReadingsPage = () => {
   const [filterDate, setFilterDate] = useState('');
   const [filterSlot, setFilterSlot] = useState('All Slots');
 
+  // Pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+
   // Modals
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingReading, setEditingReading] = useState(null);
@@ -39,6 +43,7 @@ export const ReadingsPage = () => {
       if (filterDate) params.date = filterDate;
       const res = await readingService.getReadings(params);
       setReadings(res.data?.readings || []);
+      setCurrentPage(1); // Reset to page 1 on filter change
     } catch (err) {
       toast.error('Failed to load readings.');
     } finally {
@@ -69,6 +74,13 @@ export const ReadingsPage = () => {
     if (filterSlot !== 'All Slots' && r.slot !== filterSlot) return false;
     return true;
   });
+
+  // Calculate paginated slice
+  const totalPages = Math.max(1, Math.ceil(filteredReadings.length / pageSize));
+  const paginatedReadings = filteredReadings.slice(
+    (currentPage - 1) * pageSize,
+    currentPage * pageSize
+  );
 
   return (
     <div className="space-y-6 animate-fadeIn">
@@ -172,7 +184,7 @@ export const ReadingsPage = () => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border/60">
-                  {filteredReadings.map((r) => {
+                  {paginatedReadings.map((r) => {
                     const status = getGlucoseStatus(r.value);
                     return (
                       <tr key={r.id} className="hover:bg-surface-subtle/30 transition-colors">
@@ -222,7 +234,7 @@ export const ReadingsPage = () => {
 
             {/* Mobile Card List View */}
             <div className="sm:hidden divide-y divide-border/60">
-              {filteredReadings.map((r) => {
+              {paginatedReadings.map((r) => {
                 const status = getGlucoseStatus(r.value);
                 return (
                   <div key={r.id} className="p-4 space-y-3">
@@ -269,6 +281,37 @@ export const ReadingsPage = () => {
                 );
               })}
             </div>
+
+            {/* Pagination Controls */}
+            {totalPages > 1 && (
+              <div className="p-4 sm:p-5 border-t border-border/60 flex flex-col sm:flex-row items-center justify-between gap-3 bg-surface-subtle/30">
+                <span className="text-xs text-content-secondary">
+                  Showing {(currentPage - 1) * pageSize + 1}–{Math.min(currentPage * pageSize, filteredReadings.length)} of {filteredReadings.length} readings
+                </span>
+
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={currentPage <= 1}
+                    onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                  >
+                    Previous
+                  </Button>
+                  <span className="text-xs font-bold text-content-primary px-2">
+                    {currentPage} / {totalPages}
+                  </span>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={currentPage >= totalPages}
+                    onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                  >
+                    Next
+                  </Button>
+                </div>
+              </div>
+            )}
           </>
         )}
       </Card>
@@ -296,3 +339,4 @@ export const ReadingsPage = () => {
 };
 
 export default ReadingsPage;
+

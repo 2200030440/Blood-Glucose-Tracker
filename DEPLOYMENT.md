@@ -163,3 +163,4 @@ Whenever you push new commits to your `main` branch on GitHub:
 1. **Date-Only Storage Strategy**: Calendar dates are strictly captured and stored in `YYYY-MM-DD` string format. This eliminates timezone drift and accidental day shifts when users log measurements across different UTC offsets.
 2. **Concurrency Safety**: Maximum 4 readings per day and single-reading-per-slot rules are protected using database transactions and atomic locks, preventing duplicate insertions under rapid concurrent submissions.
 3. **HTTP-Only Cookies**: Authentication tokens are transmitted in secure HTTP-only cookies (`SameSite=Strict`, `Secure=true` in production), preventing XSS token theft.
+

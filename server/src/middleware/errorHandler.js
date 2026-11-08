@@ -49,3 +49,4 @@ export const errorHandler = (err, req, res, next) => {
 export const notFoundHandler = (req, res) => {
   return sendError(res, `Route not found: ${req.method} ${req.originalUrl}`, 404);
 };
+

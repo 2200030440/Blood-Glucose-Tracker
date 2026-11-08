@@ -18,3 +18,4 @@ export const env = {
   COOKIE_SECRET: process.env.COOKIE_SECRET || 'sweety_cookie_secret_key_2026',
   CLIENT_URL: process.env.CLIENT_URL || 'http://localhost:5173',
 };
+

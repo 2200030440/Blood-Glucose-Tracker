@@ -22,3 +22,4 @@ export const sendError = (res, message = 'An error occurred', statusCode = 400, 
 
   return res.status(statusCode).json(payload);
 };
+

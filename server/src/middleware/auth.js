@@ -57,3 +57,4 @@ export const requireAuth = async (req, res, next) => {
     return sendError(res, 'Authentication verification failed.', 401);
   }
 };
+

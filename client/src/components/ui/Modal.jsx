@@ -68,3 +68,4 @@ export const Modal = ({ isOpen, onClose, title, description, children, maxWidth 
 };
 
 export default Modal;
+

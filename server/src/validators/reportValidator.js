@@ -9,3 +9,4 @@ export const reportQuerySchema = z.object({
       message: 'Please provide a valid date in YYYY-MM-DD format.',
     }),
 });
+

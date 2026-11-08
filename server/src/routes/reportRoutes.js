@@ -18,3 +18,4 @@ router.get('/month-to-date', validate(reportQuerySchema, 'query'), monthToDate);
 router.get('/monthly', validate(reportQuerySchema, 'query'), monthly);
 
 export default router;
+

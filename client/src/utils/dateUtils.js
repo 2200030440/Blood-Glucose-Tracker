@@ -83,3 +83,4 @@ export const getGlucoseStatus = (value) => {
     description: 'Hyperglycemia (>180 mg/dL)',
   };
 };
+

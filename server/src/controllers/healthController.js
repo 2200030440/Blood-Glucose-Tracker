@@ -26,3 +26,4 @@ export const checkHealth = async (req, res) => {
     service: 'SWEETY Blood Glucose Tracker',
   });
 };
+

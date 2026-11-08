@@ -47,3 +47,4 @@ export const AuthLayout = () => {
 };
 
 export default AuthLayout;
+

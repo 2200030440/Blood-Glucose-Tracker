@@ -126,3 +126,4 @@ export const getUserById = async (userId) => {
 
   return user;
 };
+

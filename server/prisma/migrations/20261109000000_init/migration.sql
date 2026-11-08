@@ -37,3 +37,4 @@ CREATE UNIQUE INDEX "readings_userId_date_slot_key" ON "readings"("userId", "dat
 
 -- AddForeignKey
 ALTER TABLE "readings" ADD CONSTRAINT "readings_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
