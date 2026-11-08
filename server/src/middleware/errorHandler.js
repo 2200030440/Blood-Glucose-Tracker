@@ -29,6 +29,16 @@ export const errorHandler = (err, req, res, next) => {
     return sendError(res, 'Requested resource was not found or has been removed.', 404);
   }
 
+  if (err.code === 'P2021') {
+    console.error('[DATABASE SETUP ERROR] Tables do not exist:', err.message);
+    return sendError(res, 'Database tables are initializing. Please refresh in a moment.', 503);
+  }
+
+  if (err.code === 'P1001') {
+    console.error('[DATABASE CONNECTION ERROR] Cannot reach database:', err.message);
+    return sendError(res, 'Cannot connect to PostgreSQL. Please check DATABASE_URL.', 503);
+  }
+
   // Custom application error with statusCode
   const statusCode = err.statusCode || err.status || 500;
   const message = err.message || 'An unexpected internal server error occurred.';

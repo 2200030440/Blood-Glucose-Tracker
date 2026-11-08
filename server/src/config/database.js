@@ -51,6 +51,24 @@ class InMemoryPrismaClient {
         return { count };
       },
       count: async () => this.users.size,
+      upsert: async ({ where, update, create }) => {
+        let existing = null;
+        if (where.email) {
+          existing = await this.user.findUnique({ where });
+        } else if (where.id) {
+          existing = await this.user.findUnique({ where });
+        }
+        if (existing) {
+          const updated = {
+            ...existing,
+            ...update,
+            updatedAt: new Date(),
+          };
+          this.users.set(existing.id, updated);
+          return { ...updated };
+        }
+        return await this.user.create({ data: create });
+      },
     };
 
     this.reading = {
@@ -167,6 +185,19 @@ class InMemoryPrismaClient {
         const count = this.readings.size;
         this.readings.clear();
         return { count };
+      },
+      upsert: async ({ where, update, create }) => {
+        let existing = null;
+        if (where.userId_date_slot_unique) {
+          const { userId, date, slot } = where.userId_date_slot_unique;
+          existing = await this.reading.findFirst({ where: { userId, date, slot } });
+        } else if (where.id) {
+          existing = await this.reading.findUnique({ where });
+        }
+        if (existing) {
+          return await this.reading.update({ where: { id: existing.id }, data: update });
+        }
+        return await this.reading.create({ data: create });
       },
       aggregate: async ({ where = {}, _max, _min, _avg, _count }) => {
         const list = await this.reading.findMany({ where });

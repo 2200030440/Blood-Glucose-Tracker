@@ -1,22 +1,76 @@
 import app from './app.js';
 import { env } from './config/env.js';
 import { prisma, initInMemoryDemoData } from './config/database.js';
+import { seedDatabase } from '../prisma/seed.js';
+import { execSync } from 'child_process';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const PORT = env.PORT;
 const HOST = '0.0.0.0';
 
 let server;
 
+/**
+ * Automatically ensures database migrations and demo data are initialized
+ */
+const ensureDatabaseReady = async () => {
+  try {
+    await prisma.$connect();
+    console.log('✓ Database connection established.');
+
+    // 1. Test if tables exist
+    let tablesExist = false;
+    try {
+      await prisma.user.count();
+      tablesExist = true;
+    } catch (err) {
+      console.warn('! Database tables not found. Running Prisma migrations now...');
+    }
+
+    // 2. If tables do not exist, automatically deploy migrations
+    if (!tablesExist) {
+      try {
+        const schemaPath = fs.existsSync('server/prisma/schema.prisma')
+          ? 'server/prisma/schema.prisma'
+          : fs.existsSync('prisma/schema.prisma')
+          ? 'prisma/schema.prisma'
+          : path.resolve(__dirname, '../prisma/schema.prisma');
+
+        console.log(`Applying migrations using schema: ${schemaPath}...`);
+        execSync(`npx prisma migrate deploy --schema="${schemaPath}"`, { stdio: 'inherit' });
+        console.log('✓ Database migrations applied successfully.');
+      } catch (migErr) {
+        console.warn('Notice: Migration CLI failed, verifying schema:', migErr.message);
+      }
+    }
+
+    // 3. Ensure demo user and sample readings exist
+    try {
+      const demoUser = await prisma.user.findUnique({ where: { email: 'demo@sweety.app' } });
+      if (!demoUser) {
+        console.log('Seeding demo account into database...');
+        await seedDatabase(prisma);
+      } else {
+        console.log('✓ Demo account verified in database.');
+      }
+    } catch (seedErr) {
+      console.warn('Notice: Seeding check error:', seedErr.message);
+      await initInMemoryDemoData(prisma);
+    }
+  } catch (dbErr) {
+    console.warn('! Live PostgreSQL not reachable. Using fallback in-memory demo store:', dbErr.message);
+    await initInMemoryDemoData(prisma);
+  }
+};
+
 const startServer = async () => {
   try {
-    // Attempt database connection check
-    try {
-      await prisma.$connect();
-      console.log('✓ Database connection initialized.');
-      await initInMemoryDemoData(prisma);
-    } catch (dbErr) {
-      console.warn('! Notice: Live PostgreSQL not available on local port, using in-memory demo store.');
-    }
+    await ensureDatabaseReady();
 
     server = app.listen(PORT, HOST, () => {
       console.log(`===================================================`);

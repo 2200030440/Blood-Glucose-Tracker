@@ -2,9 +2,8 @@ import bcrypt from 'bcryptjs';
 import { PrismaClient } from '@prisma/client';
 import { getTodayDateString, getPreviousCalendarMonthRange } from '../src/utils/dateUtils.js';
 
-const prisma = new PrismaClient();
-
-async function main() {
+export async function seedDatabase(client) {
+  const prismaClient = client || new PrismaClient();
   console.log('Seeding Sweety demo database...');
 
   const demoEmail = 'demo@sweety.app';
@@ -14,7 +13,7 @@ async function main() {
   // 1. Create or update Demo User (idempotent)
   const passwordHash = await bcrypt.hash(demoPassword, 12);
 
-  const demoUser = await prisma.user.upsert({
+  const demoUser = await prismaClient.user.upsert({
     where: { email: demoEmail },
     update: {
       name: demoName,
@@ -87,7 +86,7 @@ async function main() {
 
   let insertedCount = 0;
   for (const r of sampleReadings) {
-    await prisma.reading.upsert({
+    await prismaClient.reading.upsert({
       where: {
         userId_date_slot_unique: {
           userId: demoUser.id,
@@ -109,15 +108,18 @@ async function main() {
   }
 
   console.log(`✓ Seeded ${insertedCount} glucose readings for demo user.`);
-  console.log('Seed completed successfully!');
+  return { demoUser, insertedCount };
 }
 
-main()
-  .catch((e) => {
-    console.error('Error during seeding:', e);
-    process.exit(1);
-  })
-  .finally(async () => {
-    await prisma.$disconnect();
-  });
-
+// If executed directly: node server/prisma/seed.js
+if (process.argv[1] && process.argv[1].endsWith('seed.js')) {
+  const standalonePrisma = new PrismaClient();
+  seedDatabase(standalonePrisma)
+    .catch((e) => {
+      console.error('Error during seeding:', e);
+      process.exit(1);
+    })
+    .finally(async () => {
+      await standalonePrisma.$disconnect();
+    });
+}
