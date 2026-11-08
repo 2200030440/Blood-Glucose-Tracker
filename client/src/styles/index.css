@@ -1,0 +1,85 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --color-primary: 118 101 232;
+    --color-primary-deep: 91 75 196;
+    --color-primary-light: 240 237 255;
+    --color-background: 248 249 253;
+    --color-surface: 255 255 255;
+    --color-accent-pink: 252 235 243;
+    --color-success: 46 173 131;
+    --color-warning: 233 162 59;
+    --color-danger: 228 92 112;
+    --color-text-primary: 32 36 58;
+    --color-text-secondary: 133 137 157;
+    --color-border: 236 236 243;
+  }
+
+  body {
+    background-color: #F8F9FD;
+    color: #20243A;
+    font-family: 'Inter', 'Manrope', system-ui, -apple-system, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    overflow-x: hidden;
+  }
+
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #ECECF3;
+    border-radius: 9999px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #85899D;
+  }
+}
+
+/* Glassmorphism helpers */
+.glass-panel {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(236, 236, 243, 0.8);
+}
+
+.glass-card {
+  background: #FFFFFF;
+  border: 1px solid #ECECF3;
+  box-shadow: 0 4px 20px -2px rgba(118, 101, 232, 0.04), 0 2px 6px -1px rgba(32, 36, 58, 0.03);
+}
+
+/* Shimmer animation for loading skeletons */
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.shimmer-effect {
+  position: relative;
+  overflow: hidden;
+}
+.shimmer-effect::after {
+  position: absolute;
+  top: 0; right: 0; bottom: 0; left: 0;
+  transform: translateX(-100%);
+  background-image: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0) 0,
+    rgba(255, 255, 255, 0.5) 20%,
+    rgba(255, 255, 255, 0.8) 60%,
+    rgba(255, 255, 255, 0)
+  );
+  animation: shimmer 2s infinite;
+  content: '';
+}
