@@ -1,6 +1,6 @@
 import app from './app.js';
 import { env } from './config/env.js';
-import { prisma, initInMemoryDemoData } from './config/database.js';
+import { prisma, initInMemoryDemoData, switchToInMemory, isUsingInMemory, getRealPrisma } from './config/database.js';
 import { seedDatabase } from '../prisma/seed.js';
 import { execSync } from 'child_process';
 import fs from 'fs';
@@ -19,14 +19,23 @@ let server;
  * Automatically ensures database migrations and demo data are initialized
  */
 const ensureDatabaseReady = async () => {
+  // If in-memory is forced or test, pre-populate demo data:
+  if (isUsingInMemory()) {
+    console.log('✓ Using in-memory demo database.');
+    switchToInMemory();
+    return;
+  }
+
+  const realPrisma = getRealPrisma();
+
   try {
-    await prisma.$connect();
+    await realPrisma.$connect();
     console.log('✓ Database connection established.');
 
     // 1. Test if tables exist
     let tablesExist = false;
     try {
-      await prisma.user.count();
+      await realPrisma.user.count();
       tablesExist = true;
     } catch (err) {
       console.warn('! Database tables not found. Running Prisma migrations now...');
@@ -51,20 +60,20 @@ const ensureDatabaseReady = async () => {
 
     // 3. Ensure demo user and sample readings exist
     try {
-      const demoUser = await prisma.user.findUnique({ where: { email: 'demo@sweety.app' } });
+      const demoUser = await realPrisma.user.findUnique({ where: { email: 'demo@sweety.app' } });
       if (!demoUser) {
         console.log('Seeding demo account into database...');
-        await seedDatabase(prisma);
+        await seedDatabase(realPrisma);
       } else {
         console.log('✓ Demo account verified in database.');
       }
     } catch (seedErr) {
       console.warn('Notice: Seeding check error:', seedErr.message);
-      await initInMemoryDemoData(prisma);
+      switchToInMemory();
     }
   } catch (dbErr) {
-    console.warn('! Live PostgreSQL not reachable. Using fallback in-memory demo store:', dbErr.message);
-    await initInMemoryDemoData(prisma);
+    console.warn('! Live PostgreSQL not reachable locally. Automatically falling back to in-memory demo store.');
+    switchToInMemory();
   }
 };
 

@@ -1,10 +1,8 @@
 import { PrismaClient } from '@prisma/client';
 import { env } from './env.js';
 
-let prisma;
-
 /**
- * In-Memory Prisma Mock for isolated testing and fallback
+ * In-Memory Prisma Mock for isolated testing and local offline fallback
  */
 class InMemoryPrismaClient {
   constructor() {
@@ -22,8 +20,21 @@ class InMemoryPrismaClient {
         }
         return null;
       },
+      findFirst: async ({ where = {} } = {}) => {
+        for (const u of this.users.values()) {
+          if (where.id && u.id !== where.id) continue;
+          if (where.email && u.email.toLowerCase() !== where.email.toLowerCase()) continue;
+          return { ...u };
+        }
+        return null;
+      },
+      findMany: async ({ where = {} } = {}) => {
+        let list = Array.from(this.users.values());
+        if (where.email) list = list.filter((u) => u.email.toLowerCase() === where.email.toLowerCase());
+        if (where.id) list = list.filter((u) => u.id === where.id);
+        return list.map((u) => ({ ...u }));
+      },
       create: async ({ data }) => {
-        // Unique check
         for (const u of this.users.values()) {
           if (u.email.toLowerCase() === data.email.toLowerCase()) {
             const err = new Error('Unique constraint failed on the fields: (`email`)');
@@ -44,6 +55,27 @@ class InMemoryPrismaClient {
         };
         this.users.set(id, user);
         return { ...user };
+      },
+      update: async ({ where, data }) => {
+        const u = await this.user.findUnique({ where });
+        if (!u) {
+          const err = new Error('Record not found');
+          err.code = 'P2025';
+          throw err;
+        }
+        const updated = { ...u, ...data, updatedAt: new Date() };
+        this.users.set(u.id, updated);
+        return { ...updated };
+      },
+      delete: async ({ where }) => {
+        const u = await this.user.findUnique({ where });
+        if (!u) {
+          const err = new Error('Record not found');
+          err.code = 'P2025';
+          throw err;
+        }
+        this.users.delete(u.id);
+        return { ...u };
       },
       deleteMany: async () => {
         const count = this.users.size;
@@ -117,7 +149,7 @@ class InMemoryPrismaClient {
         return list.length;
       },
       create: async ({ data }) => {
-        // Enforce DB unique constraint (userId, date, slot)
+        // Enforce unique constraint (userId, date, slot)
         for (const r of this.readings.values()) {
           if (r.userId === data.userId && r.date === data.date && r.slot === data.slot) {
             const err = new Error('Unique constraint failed on the fields: (`userId`, `date`, `slot`)');
@@ -151,7 +183,6 @@ class InMemoryPrismaClient {
         const newDate = data.date || existing.date;
         const newSlot = data.slot || existing.slot;
 
-        // Unique check
         for (const r of this.readings.values()) {
           if (r.id !== where.id && r.userId === existing.userId && r.date === newDate && r.slot === newSlot) {
             const err = new Error('Unique constraint failed on the fields: (`userId`, `date`, `slot`)');
@@ -228,7 +259,6 @@ class InMemoryPrismaClient {
     if (typeof fn === 'function') {
       return await fn(this);
     }
-    // Array of promises
     return await Promise.all(fn);
   }
 
@@ -241,73 +271,186 @@ class InMemoryPrismaClient {
   }
 }
 
-// In test environment or explicit fallback, use InMemoryPrismaClient
-if (env.NODE_ENV === 'test' || process.env.USE_IN_MEMORY_DB === 'true') {
-  prisma = new InMemoryPrismaClient();
-} else {
+const inMemoryClient = new InMemoryPrismaClient();
+let realPrisma = null;
+let useFallback = env.NODE_ENV === 'test' || process.env.USE_IN_MEMORY_DB === 'true';
+
+// Helper to determine if an error is a database connectivity/configuration issue
+const isDatabaseConnectionError = (err) => {
+  if (!err) return false;
+  const msg = err.message || '';
+  return (
+    err.code === 'P1001' || // Can't reach database server
+    err.code === 'P1012' || // Schema validation / env var missing
+    err.code === 'P1003' || // Database does not exist
+    msg.includes('Environment variable not found') ||
+    msg.includes("Can't reach database server") ||
+    msg.includes('ECONNREFUSED') ||
+    msg.includes('database system is starting up') ||
+    msg.includes('connection refused')
+  );
+};
+
+if (!useFallback) {
   try {
-    prisma = new PrismaClient({
+    realPrisma = new PrismaClient({
       log: env.NODE_ENV === 'development' ? ['warn', 'error'] : ['error'],
     });
   } catch (err) {
-    console.error('Warning: PrismaClient initialization issue, using in-memory store:', err.message);
-    prisma = new InMemoryPrismaClient();
+    console.warn('Notice: PrismaClient initialization issue, using in-memory store:', err.message);
+    useFallback = true;
   }
 }
 
+export const switchToInMemory = () => {
+  useFallback = true;
+  initInMemoryDemoData(inMemoryClient);
+};
+
+export const isUsingInMemory = () => useFallback;
+export const getRealPrisma = () => realPrisma;
+
 /**
- * Pre-populate demo data into InMemoryPrismaClient if in-memory mode is active
+ * Creates a smart proxy for a model (user, reading) that attempts real Prisma first
+ * and seamlessly falls back to the in-memory mock if the database is unreachable or down.
  */
-export const initInMemoryDemoData = async (inMemoryClient) => {
-  if (!(inMemoryClient instanceof InMemoryPrismaClient)) return;
-
-  const demoEmail = 'demo@sweety.app';
-  const existing = await inMemoryClient.user.findUnique({ where: { email: demoEmail } });
-  if (existing) return;
-
-  // bcrypt hash for 'SweetyDemo@123'
-  const passwordHash = '$2a$12$N9qo8uLOickgx2ZMRZoMye.U8D.D9m8I.4oE2p1B9rFfRzE3y1h8a';
-  const demoUser = await inMemoryClient.user.create({
-    data: {
-      name: 'Sweety Demo',
-      email: demoEmail,
-      passwordHash,
-    },
+const createModelProxy = (modelName) => {
+  return new Proxy({}, {
+    get(target, method) {
+      return async (...args) => {
+        if (useFallback || !realPrisma) {
+          return inMemoryClient[modelName][method](...args);
+        }
+        try {
+          return await realPrisma[modelName][method](...args);
+        } catch (err) {
+          if (isDatabaseConnectionError(err)) {
+            console.warn(`[Sweety DB Fallback] PostgreSQL offline (${err.message}). Seamlessly using in-memory store.`);
+            switchToInMemory();
+            return inMemoryClient[modelName][method](...args);
+          }
+          throw err;
+        }
+      };
+    }
   });
+};
 
-  const now = new Date();
-  const year = now.getFullYear();
-  const month = String(now.getMonth() + 1).padStart(2, '0');
-  const day = String(now.getDate()).padStart(2, '0');
-  const today = `${year}-${month}-${day}`;
+/**
+ * Transparent Prisma Proxy:
+ * Routes queries to real Prisma (when PostgreSQL is active)
+ * or in-memory fallback (when running locally without PostgreSQL).
+ */
+export const prisma = new Proxy({}, {
+  get(target, prop) {
+    if (prop === 'user') return createModelProxy('user');
+    if (prop === 'reading') return createModelProxy('reading');
 
-  const prevMonth = now.getMonth() === 0 ? 12 : now.getMonth();
-  const prevYear = now.getMonth() === 0 ? year - 1 : year;
-  const prevMonthStr = String(prevMonth).padStart(2, '0');
+    if (prop === '$transaction') {
+      return async (arg) => {
+        if (useFallback || !realPrisma) {
+          return inMemoryClient.$transaction(arg);
+        }
+        try {
+          return await realPrisma.$transaction(arg);
+        } catch (err) {
+          if (isDatabaseConnectionError(err)) {
+            switchToInMemory();
+            return inMemoryClient.$transaction(arg);
+          }
+          throw err;
+        }
+      };
+    }
 
-  const demoReadings = [
-    { date: today, slot: 'Morning (Fasting)', value: 92 },
-    { date: today, slot: 'After breakfast', value: 128 },
-    { date: today, slot: 'After lunch', value: 114 },
-    { date: `${prevYear}-${prevMonthStr}-05`, slot: 'Morning (Fasting)', value: 95 },
-    { date: `${prevYear}-${prevMonthStr}-05`, slot: 'After lunch', value: 130 },
-    { date: `${prevYear}-${prevMonthStr}-15`, slot: 'Morning (Fasting)', value: 98 },
-    { date: `${prevYear}-${prevMonthStr}-15`, slot: 'After lunch', value: 125 },
-    { date: `${prevYear}-${prevMonthStr}-25`, slot: 'Morning (Fasting)', value: 91 },
-    { date: `${prevYear}-${prevMonthStr}-25`, slot: 'After dinner', value: 138 },
-  ];
+    if (prop === '$connect') {
+      return async () => {
+        if (useFallback || !realPrisma) return;
+        try {
+          return await realPrisma.$connect();
+        } catch (err) {
+          switchToInMemory();
+        }
+      };
+    }
 
-  for (const r of demoReadings) {
-    await inMemoryClient.reading.create({
+    if (prop === '$disconnect') {
+      return async () => {
+        if (realPrisma) {
+          try {
+            await realPrisma.$disconnect();
+          } catch {}
+        }
+      };
+    }
+
+    if (useFallback || !realPrisma) {
+      const val = inMemoryClient[prop];
+      return typeof val === 'function' ? val.bind(inMemoryClient) : val;
+    }
+    const val = realPrisma[prop];
+    return typeof val === 'function' ? val.bind(realPrisma) : val;
+  }
+});
+
+/**
+ * Pre-populate demo data into InMemoryPrismaClient
+ */
+export const initInMemoryDemoData = async (client = inMemoryClient) => {
+  try {
+    const demoEmail = 'demo@sweety.app';
+    const existing = await client.user.findUnique({ where: { email: demoEmail } });
+    if (existing) return;
+
+    // bcrypt hash for 'SweetyDemo@123'
+    const passwordHash = '$2a$12$RkN9nQJU5x7dHDAVzQa/zeNBDAVtEAkoLDEI5Ha8Qnr5VswV1HYoS';
+    const demoUser = await client.user.create({
       data: {
-        userId: demoUser.id,
-        date: r.date,
-        slot: r.slot,
-        value: r.value,
+        name: 'Sweety Demo',
+        email: demoEmail,
+        passwordHash,
       },
     });
+
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    const today = `${year}-${month}-${day}`;
+
+    const prevMonth = now.getMonth() === 0 ? 12 : now.getMonth();
+    const prevYear = now.getMonth() === 0 ? year - 1 : year;
+    const prevMonthStr = String(prevMonth).padStart(2, '0');
+
+    const demoReadings = [
+      { date: today, slot: 'Morning (Fasting)', value: 92 },
+      { date: today, slot: 'After breakfast', value: 128 },
+      { date: today, slot: 'After lunch', value: 114 },
+      { date: `${prevYear}-${prevMonthStr}-05`, slot: 'Morning (Fasting)', value: 95 },
+      { date: `${prevYear}-${prevMonthStr}-05`, slot: 'After lunch', value: 130 },
+      { date: `${prevYear}-${prevMonthStr}-15`, slot: 'Morning (Fasting)', value: 98 },
+      { date: `${prevYear}-${prevMonthStr}-15`, slot: 'After lunch', value: 125 },
+      { date: `${prevYear}-${prevMonthStr}-25`, slot: 'Morning (Fasting)', value: 91 },
+      { date: `${prevYear}-${prevMonthStr}-25`, slot: 'After dinner', value: 138 },
+    ];
+
+    for (const r of demoReadings) {
+      await client.reading.create({
+        data: {
+          userId: demoUser.id,
+          date: r.date,
+          slot: r.slot,
+          value: r.value,
+        },
+      });
+    }
+  } catch (err) {
+    // Ignore duplicate creation
   }
 };
 
-export { prisma, InMemoryPrismaClient };
+// Automatically ensure demo data exists on the in-memory store immediately
+initInMemoryDemoData(inMemoryClient);
+
+export { InMemoryPrismaClient };
 export default prisma;
