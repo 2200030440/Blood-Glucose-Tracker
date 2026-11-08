@@ -6,6 +6,9 @@ FROM node:20-alpine AS builder
 
 WORKDIR /app
 
+# Fallback DATABASE_URL for Prisma client generation at build time
+ENV DATABASE_URL="postgresql://postgres:postgres@localhost:5432/sweety_db"
+
 # Copy package manifests
 COPY package*.json ./
 COPY client/package*.json ./client/
@@ -28,6 +31,7 @@ WORKDIR /app
 
 ENV NODE_ENV=production
 ENV PORT=5000
+ENV DATABASE_URL="postgresql://postgres:postgres@localhost:5432/sweety_db"
 
 # Copy root manifests
 COPY --from=builder /app/package*.json ./

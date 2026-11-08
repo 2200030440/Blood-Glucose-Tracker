@@ -8,7 +8,7 @@
   "scripts": {
     "start": "node src/server.js",
     "dev": "nodemon src/server.js",
-    "prisma:generate": "prisma generate --schema=prisma/schema.prisma",
+    "prisma:generate": "node -e \"process.env.DATABASE_URL = process.env.DATABASE_URL || 'postgresql://postgres:postgres@localhost:5432/sweety_db'; require('child_process').execSync('prisma generate --schema=prisma/schema.prisma', { stdio: 'inherit', env: process.env });\"",
     "prisma:migrate": "prisma migrate deploy --schema=prisma/schema.prisma",
     "prisma:migrate:dev": "prisma migrate dev --schema=prisma/schema.prisma",
     "prisma:seed": "node prisma/seed.js",
