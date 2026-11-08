@@ -17,6 +17,9 @@ const __dirname = path.dirname(__filename);
 
 const app = express();
 
+// Trust reverse proxy for secure cookies and rate limiting in cloud environments (Render / Railway)
+app.set('trust proxy', 1);
+
 // Security HTTP headers
 app.use(
   helmet({
@@ -64,16 +67,20 @@ app.use('/api', apiLimiter);
 // Mount main API router
 app.use('/api', apiRouter);
 
-// Static file serving for Single-Service production deployment (Railway)
-const clientDistPath = path.resolve(__dirname, '../../client/dist');
-const hasClientDist = fs.existsSync(clientDistPath);
+// Static file serving for Single-Service production deployment (Render / Railway / Docker)
+const distCandidates = [
+  path.resolve(__dirname, '../../client/dist'),
+  path.resolve(__dirname, '../client/dist'),
+  path.resolve(process.cwd(), 'client/dist'),
+  path.resolve(process.cwd(), 'dist'),
+];
+const clientDistPath = distCandidates.find((dir) => fs.existsSync(path.join(dir, 'index.html')));
 
-if (hasClientDist) {
+if (clientDistPath) {
   // Serve static assets with caching
   app.use(
     express.static(clientDistPath, {
       maxAge: '1d',
-      index: false,
     })
   );
 

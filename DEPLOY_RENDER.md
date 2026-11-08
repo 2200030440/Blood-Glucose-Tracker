@@ -58,7 +58,7 @@ If you prefer manual creation in the Render dashboard:
      ```
    - **Start Command**:
      ```bash
-     npm run prisma:migrate && node server/prisma/seed.js && npm run start
+     npm start
      ```
    - **Instance Type**: Select **"Free"**.
 
@@ -90,4 +90,3 @@ Once the build completes (takes about 2 minutes):
 - Native PostgreSQL with Prisma support.
 - Automatic HTTPS with free SSL certificates.
 - Single public domain serving both React static files and Express API.
-

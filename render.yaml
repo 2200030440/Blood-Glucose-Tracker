@@ -4,7 +4,7 @@ services:
     runtime: node
     plan: free
     buildCommand: npm run build
-    startCommand: npm run prisma:generate && npm run prisma:migrate && node server/prisma/seed.js && node server/src/server.js
+    startCommand: npm start
     healthCheckPath: /api/health
     envVars:
       - key: NODE_ENV

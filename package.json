@@ -13,7 +13,7 @@
     "dev:server": "npm run dev --workspace=server",
     "dev:client": "npm run dev --workspace=client",
     "build": "npm run build --workspace=client && npm run prisma:generate",
-    "start": "npm run prisma:generate && node server/src/server.js",
+    "start": "node server/src/server.js",
     "test": "npm run test --workspace=server",
     "test:client": "npm run test --workspace=client",
     "prisma:generate": "node -e \"process.env.DATABASE_URL = process.env.DATABASE_URL || 'postgresql://postgres:postgres@localhost:5432/sweety_db'; require('child_process').execSync('prisma generate --schema=server/prisma/schema.prisma', { stdio: 'inherit', env: process.env });\"",
@@ -21,11 +21,11 @@
     "prisma:seed": "node server/prisma/seed.js"
   },
   "dependencies": {
-    "@prisma/client": "^5.22.0"
+    "@prisma/client": "^5.22.0",
+    "prisma": "^5.22.0"
   },
   "devDependencies": {
-    "concurrently": "^8.2.2",
-    "prisma": "^5.22.0"
+    "concurrently": "^8.2.2"
   },
   "engines": {
     "node": ">=18.0.0"
