@@ -8,22 +8,27 @@
     "client"
   ],
   "scripts": {
+    "postinstall": "npm run prisma:generate",
     "dev": "concurrently \"npm run dev --workspace=server\" \"npm run dev --workspace=client\"",
     "dev:server": "npm run dev --workspace=server",
     "dev:client": "npm run dev --workspace=client",
-    "build": "npm run build --workspace=client && npm run prisma:generate --workspace=server",
-    "start": "npm run start --workspace=server",
+    "build": "npm run build --workspace=client && npm run prisma:generate",
+    "start": "npm run prisma:generate && node server/src/server.js",
     "test": "npm run test --workspace=server",
     "test:client": "npm run test --workspace=client",
-    "prisma:generate": "npm run prisma:generate --workspace=server",
-    "prisma:migrate": "npm run prisma:migrate --workspace=server",
-    "prisma:seed": "npm run prisma:seed --workspace=server"
+    "prisma:generate": "prisma generate --schema=server/prisma/schema.prisma",
+    "prisma:migrate": "prisma migrate deploy --schema=server/prisma/schema.prisma",
+    "prisma:seed": "node server/prisma/seed.js"
+  },
+  "dependencies": {
+    "@prisma/client": "^5.22.0"
   },
   "devDependencies": {
-    "concurrently": "^8.2.2"
+    "concurrently": "^8.2.2",
+    "prisma": "^5.22.0",
+    "puppeteer-core": "^25.16.0"
   },
   "engines": {
     "node": ">=18.0.0"
   }
 }
-

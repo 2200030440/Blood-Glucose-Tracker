@@ -4,7 +4,7 @@ services:
     runtime: node
     plan: free
     buildCommand: npm run build
-    startCommand: npm run prisma:migrate && node server/prisma/seed.js && npm run start
+    startCommand: npm run prisma:generate && npm run prisma:migrate && node server/prisma/seed.js && node server/src/server.js
     healthCheckPath: /api/health
     envVars:
       - key: NODE_ENV
@@ -23,3 +23,4 @@ databases:
     plan: free
     databaseName: sweety_db
     user: sweety_user
+

@@ -214,9 +214,14 @@ class InMemoryPrismaClient {
 if (env.NODE_ENV === 'test' || process.env.USE_IN_MEMORY_DB === 'true') {
   prisma = new InMemoryPrismaClient();
 } else {
-  prisma = new PrismaClient({
-    log: env.NODE_ENV === 'development' ? ['warn', 'error'] : ['error'],
-  });
+  try {
+    prisma = new PrismaClient({
+      log: env.NODE_ENV === 'development' ? ['warn', 'error'] : ['error'],
+    });
+  } catch (err) {
+    console.error('Warning: PrismaClient initialization issue, using in-memory store:', err.message);
+    prisma = new InMemoryPrismaClient();
+  }
 }
 
 /**
