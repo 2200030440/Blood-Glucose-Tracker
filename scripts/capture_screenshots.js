@@ -125,3 +125,4 @@ run().catch(err => {
   console.error('Error taking screenshots:', err);
   process.exit(1);
 });
+
