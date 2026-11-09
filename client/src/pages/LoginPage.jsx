@@ -68,7 +68,7 @@ export const LoginPage = () => {
         <div className="flex items-center gap-2">
           <Sparkles className="w-4 h-4 text-primary shrink-0" />
           <div className="text-left">
-            <p className="text-xs font-bold text-primary-deep">Kenpath Hiring Reviewer?</p>
+            <p className="text-xs font-bold text-primary-deep">Exploring the Demo?</p>
             <p className="text-[11px] text-content-secondary">Click to auto-fill sample demo account</p>
           </div>
         </div>
