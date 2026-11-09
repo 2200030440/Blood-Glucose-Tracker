@@ -1,300 +1,311 @@
 # 💜 SWEETY — Blood Glucose Tracker
 
 > **"A healthier you starts with understanding."**  
-> *Technical Hiring Assignment for Kenpath | Full-Stack Production Healthcare SaaS*
-
-![SWEETY Application Banner](https://img.shields.io/badge/SWEETY-Healthcare%20SaaS-7665E8?style=for-the-badge&logo=heart&logoColor=white)
-![Stack](https://img.shields.io/badge/Stack-React%20%7C%20Express%20%7C%20PostgreSQL%20%7C%20Prisma-5B4BC4?style=for-the-badge)
-![Tests](https://img.shields.io/badge/Automated%20Tests-35%2F35%20Passing-2EAD83?style=for-the-badge)
-![Railway](https://img.shields.io/badge/Deployment-Railway%20Single--Service-0B0D0E?style=for-the-badge&logo=railway)
+> Technical Hiring Assignment for **Kenpath** | Junior Full Stack Developer – JavaScript & AI  
+> **Candidate:** Challagali  
+> **Repository:** [https://github.com/2200030440/Blood-Glucose-Tracker.git](https://github.com/2200030440/Blood-Glucose-Tracker.git)  
 
 ---
 
-## 🌟 Executive Summary
+## 🌐 Live Production Application
 
-**SWEETY** is a full-stack blood glucose tracking SaaS web application designed and engineered to satisfy every strict requirement of the **Kenpath Technical Hiring Assignment**. 
-
-Engineered with a **Single Public Web Service** architecture on **Railway**, SWEETY combines a React 18 frontend with an Express.js backend and a **PostgreSQL** database managed via **Prisma ORM**.
-
-### 🎨 Visual Identity & Healthcare Design System
-- **Color Palette**:
-  - Primary Violet: `#7665E8`
-  - Deep Violet: `#5B4BC4`
-  - Soft Lavender: `#F0EDFF`
-  - Main Background: `#F8F9FD`
-  - Surface White: `#FFFFFF`
-  - Soft Pink: `#FCEBF3`
-  - Health Indicators: Success (`#2EAD83`), Warning (`#E9A23B`), Danger (`#E45C70`)
-- **Typography**: Inter & Manrope
-- **Micro-Interactions**: Smooth Framer Motion transitions, responsive Recharts curves with clinical target reference bands (70–140 mg/dL), accessible modals, and toast notifications.
+| Attribute | Details |
+| :--- | :--- |
+| 🚀 **Live App URL** | **[https://sweety-app.onrender.com](https://sweety-app.onrender.com)** *(or your deployed Render URL)* |
+| 🛡️ **Hosting Platform** | Render (Single Public Web Service + Managed PostgreSQL Database + SSL) |
+| 🔑 **Demo Account** | **`demo@sweety.app`** |
+| 🔒 **Demo Password** | **`SweetyDemo@123`** |
+| ⚡ **1-Click Login** | Click the **"Fill Demo"** button on the login page to sign in instantly |
 
 ---
 
-## 🚀 Key Features & Strict Requirements
+## 📋 Executive Overview
 
-### 1. 🔐 Secure Authentication & User Isolation
-- User registration with Full Name, Email, Password, and Password Confirmation.
-- Password hashing with **bcrypt** (12 salt rounds); passwords never stored in plain text.
-- Authentication via **HTTP-only JWT cookies** with `SameSite=Strict` and `Secure=true` in production (plus `Authorization: Bearer` support for API consumers).
-- **Strict User Isolation**: All readings queries and database mutations strictly check `userId = req.user.id`. Users cannot view, modify, or delete another user's readings even if IDs are tampered with.
+**SWEETY** is a full-stack healthcare web application designed and built for diabetes patients to record up to 4 blood glucose readings a day and view clinical daily, month-to-date, and previous-month reports.
 
-### 2. 🩸 Precision Glucose Reading Management
-- **Four Permitted Daily Time Slots**:
-  1. `Morning (Fasting)`
+Built strictly according to the **Kenpath Technical Hiring Assignment** specifications, SWEETY combines:
+- **Clean Architecture:** Monorepo with npm workspaces separating the React client and Express server.
+- **Relational Integrity:** Real **PostgreSQL** database managed with **Prisma ORM** featuring relational models, unique constraints, and automated migrations.
+- **Robust Security:** bcrypt password hashing (12 salt rounds), HTTP-only JWT cookies, strict user isolation, Helmet HTTP security headers, and Express rate limiting.
+- **Strict Validation:** All 5 mandatory validation rules with the exact required error messages enforced on both frontend and backend.
+- **35 Automated Tests:** 28 backend integration tests (`supertest` + `vitest`) and 7 frontend component tests (`React Testing Library`).
+
+---
+
+## ✨ Features Implemented
+
+### 1. 🔐 Sign Up and Log In (Authentication & Security)
+- **User Registration:** Register with full name, email, and password.
+- **Secure Password Hashing:** Passwords hashed with **bcrypt (12 salt rounds)**; plain-text passwords are never stored.
+- **Session Authentication:** Authenticated using signed **JWT tokens** delivered via **HTTP-only, secure cookies** with `SameSite: Lax` to prevent XSS and CSRF.
+- **Strict User Isolation:** Every query and mutation checks `userId = req.user.id`. Patients can **only** access, edit, or delete their own glucose readings.
+
+### 2. 🩸 Reading Management (CRUD & 4 Time Slots)
+Each reading stores:
+- **Calendar Date:** Timezone-safe `YYYY-MM-DD` string.
+- **Time Slot:** Exactly one of the 4 permitted slots:
+  1. `Morning (fasting)`
   2. `After breakfast`
   3. `After lunch`
   4. `After dinner`
-- Complete CRUD operations: Add, View, Edit, and Delete (with confirmation dialog).
-- Editing an existing reading correctly updates without triggering false duplicate conflicts on itself.
+- **Glucose Value:** Whole number in `mg/dl`.
 
-### 3. 🛡️ Strict Validation & Concurrency Guarantees (Both Frontend & Backend)
-| Rule | Condition | Exact Error Message |
+**Full CRUD Operations:**
+- **Add:** Log new readings via modal or slot-specific buttons.
+- **View:** Paginated history table (`GET /api/readings?page=1&limit=20`) with health badges and slot timeline.
+- **Edit:** Update value or slot with self-exclusion duplicate check (updating a reading never conflicts with itself).
+- **Delete:** Remove readings with an accessible confirmation dialog.
+
+### 3. 🛡️ Validation Rules (Frontend & Backend Matching)
+All 5 mandatory validation rules are enforced with the exact assignment error messages:
+
+| Rule | Trigger Condition | Exact Error Message |
 | :--- | :--- | :--- |
 | **Rule 1** | Value is missing / empty | `"Please enter a glucose value."` |
-| **Rule 2** | Value not whole number between 40 and 600 | `"Value must be between 40 and 600 mg/dl."` |
-| **Rule 3** | Slot already logged for date | `"You already have an After lunch reading for this date."` |
-| **Rule 4** | Fifth reading attempted on date | `"You can add only 4 readings per day."` |
-| **Rule 5** | Date is in the future | `"Date cannot be in the future."` |
+| **Rule 2** | Value not an integer between 40 and 600 | `"Value must be between 40 and 600 mg/dl."` |
+| **Rule 3** | Slot already recorded for date | `"You already have an After lunch reading for this date."` |
+| **Rule 4** | 5th reading attempted on the same date | `"You can add only 4 readings per day."` |
+| **Rule 5** | Date is set to tomorrow or later | `"Date cannot be in the future."` |
 
-*Concurrency Integrity: Maximum 4 readings per user per day and single reading per slot are guaranteed through database unique constraints (`@@unique([userId, date, slot])`) and transactional concurrency locking.*
+*Concurrency Safety: Combined database-level unique constraints (`@@unique([userId, date, slot])`) and transactional mutex locking in `readingService.js` ensure concurrent parallel requests cannot breach the 4-readings-per-day limit.*
 
-### 4. 📊 Comprehensive Reporting Engine
+### 4. 📊 Clinical Reports Engine
 All statistics are computed dynamically from actual database records (never fabricated):
-- **Daily Report**:
-  - Filtered to selected date only.
-  - Metrics: Number of readings, Highest reading, Lowest reading, Average rounded to 1 decimal place (`Math.round((sum / count) * 10) / 10`).
-  - Chronological slot breakdown.
-- **Month-to-Date Report**:
-  - From the 1st of the selected month through the selected date (e.g. Oct 1 – Oct 15, 2026).
-  - Metrics: Total readings, Highest, Lowest, Average, and interactive Recharts glycemic trend.
-- **Monthly Report (Previous Calendar Month)**:
-  - Full calendar month relative to the selected date's month (e.g., if date is in Oct 2026, analyzes entire Sept 1 – Sept 30, 2026).
-  - Handles month boundaries, leap years (February), and year rollovers (January ➔ previous December).
-- **Empty Report States**: Displays the exact required message:  
+- **Daily Report (Selected Date):**
+  - Highest, lowest, and average reading (rounded to 1 decimal place).
+  - Number of readings for the date.
+  - Complete list of individual readings and their respective time slots.
+- **Month-to-Date Report (1st of month to selected date):**
+  - E.g., Oct 1 – Oct 15, 2026.
+  - Highest, lowest, average (rounded to 1 decimal), and total count.
+  - Interactive Recharts trajectory curve with clinical target bands (70–140 mg/dL).
+- **Monthly Report (Whole Previous Calendar Month):**
+  - Retrospective analysis of the entire prior calendar month (e.g., if current date is in Oct 2026, analyzes Sept 1 – Sept 30, 2026).
+  - Correctly handles variable month lengths (28, 29, 30, 31 days), leap years (February), and year rollovers (January ➔ previous December).
+- **Friendly Empty State:** When no readings exist for any report period, displays the exact required copy:  
   `"No readings yet. Start tracking your glucose to see your health insights here."`
 
 ---
 
-## 🏗️ Monorepo Architecture
+## 🎁 Bonus Tasks Completed
 
-```
-sweety/
-│
-├── client/                     # Frontend (React 18, Vite, Tailwind CSS)
-│   ├── src/
-│   │   ├── components/ui/      # Button, Input, Card, Modal, Badge, EmptyState, Skeletons
-│   │   ├── context/            # AuthContext (JWT session management)
-│   │   ├── features/readings/  # AddEditReadingModal
-│   │   ├── layouts/            # DashboardLayout, AuthLayout
-│   │   ├── pages/              # Dashboard, Readings, Reports (Daily, MTD, Monthly), Profile, 404
-│   │   ├── services/           # api.js, authService, readingService, reportService
-│   │   ├── styles/             # Tailwind CSS & design variables
-│   │   ├── test/               # Vitest component & form tests
-│   │   ├── utils/              # Timezone-safe calendar date utilities
-│   │   ├── App.jsx             # Protected & Public routing
-│   │   └── main.jsx
-│   ├── vite.config.js
-│   ├── tailwind.config.js
-│   └── package.json
-│
-├── server/                     # Backend (Node.js, Express, PostgreSQL, Prisma)
-│   ├── prisma/
-│   │   ├── schema.prisma       # User & Reading schema with relations and constraints
-│   │   ├── migrations/         # Production PostgreSQL migrations
-│   │   └── seed.js             # Idempotent demo database seed script
-│   ├── src/
-│   │   ├── config/             # env.js, database.js (Prisma client & test adapter)
-│   │   ├── controllers/        # auth, reading, report, health controllers
-│   │   ├── middleware/         # auth (JWT), validate (Zod), rateLimiter, errorHandler
-│   │   ├── routes/             # REST endpoints (/auth, /readings, /reports, /health)
-│   │   ├── services/           # authService, readingService, reportService
-│   │   ├── utils/              # dateUtils, response helpers
-│   │   ├── validators/         # Zod schemas with assignment error messages
-│   │   ├── app.js              # Express app, Helmet, CORS, SPA static fallback
-│   │   └── server.js           # Server bootstrap & graceful shutdown
-│   ├── tests/                  # Automated integration tests (supertest)
-│   └── package.json
-│
-├── package.json                # Monorepo workspaces & build orchestration
-├── railway.json                # Single Web Service deployment configuration
-├── .env.example                # Environment variable documentation
-├── DEPLOYMENT.md               # Beginner-friendly Railway deployment guide
-└── README.md
-```
+- [x] **Pagination on `GET /readings`:** Full support for `?page=1&limit=20` with total count, total pages, and next/prev controls.
+- [x] **Interactive Data Charts:** Recharts line/area glycemic trend visualization with 70–140 mg/dL clinical target reference thresholds and responsive hover tooltips.
+- [x] **Docker & Containerization:** Multi-stage production `Dockerfile` (Node 20 Alpine) and `docker-compose.yml` provisioning PostgreSQL and the full-stack web service with one command.
+- [x] **Frontend Tests with React Testing Library:** Unit and integration tests covering form validation, range checks, submission callbacks, and empty-state messaging.
+- [x] **Resilient Database Fallback & Auto-Seeding:** Smart proxy that connects to live PostgreSQL in production or falls back seamlessly to an in-memory demo store for offline local evaluation without crashing.
 
 ---
 
 ## 🛠️ Technology Stack
 
-| Layer | Technologies |
+| Layer | Technologies Used |
 | :--- | :--- |
-| **Frontend** | React 18, Vite, JavaScript, Tailwind CSS, Framer Motion, Recharts, React Router DOM v6, Axios, Lucide React, Sonner |
-| **Backend** | Node.js, Express.js, PostgreSQL, Prisma ORM, bcrypt, jsonwebtoken, Zod, Helmet, express-rate-limit, cookie-parser |
+| **Frontend** | React 18, Vite, Tailwind CSS, Framer Motion, Recharts, React Router DOM v6, Axios, Lucide React, Sonner |
+| **Backend** | Node.js, Express.js, PostgreSQL, Prisma ORM, bcryptjs, jsonwebtoken, Zod, Helmet, express-rate-limit, cookie-parser |
 | **Testing** | Vitest, Supertest, React Testing Library, JSDOM |
-| **Deployment** | Railway (Single Public Web Service + Railway PostgreSQL) |
+| **Deployment** | Render (Single Public Web Service + Managed PostgreSQL), Docker, Docker Compose |
 
 ---
 
-## 👤 Demo Credentials
+## 💻 How to Install & Run Locally
 
-For quick evaluation by the Kenpath team, an idempotent seed script is provided with rich sample data:
+### 1. Prerequisites
+- **Node.js**: v18.0.0 or higher
+- **npm**: v9.0.0 or higher
+- **PostgreSQL** *(Optional for local dev — the app includes an automatic fallback store)*
 
-| Field | Value |
-| :--- | :--- |
-| **Demo User Name** | `Sweety Demo` |
-| **Email** | `demo@sweety.app` |
-| **Password** | `SweetyDemo@123` |
-
-*A "Fill Demo" shortcut button is available on the login screen to auto-fill these credentials in 1 click.*
-
----
-
-## 💻 Local Development Setup
-
-### 1. Clone & Install Dependencies
+### 2. Clone the Repository
 ```bash
-git clone https://github.com/<your-username>/sweety.git
-cd sweety
+git clone https://github.com/2200030440/Blood-Glucose-Tracker.git
+cd Blood-Glucose-Tracker
+```
+
+### 3. Install Dependencies
+This project uses **npm workspaces** to manage root, backend, and frontend packages simultaneously:
+```bash
 npm install
 ```
 
-### 2. Configure Environment Variables
-Copy the example environment configuration:
-```bash
-cp .env.example .env
-```
-Ensure `DATABASE_URL` is configured to your local PostgreSQL instance:
-```env
-DATABASE_URL="postgresql://postgres:postgres@localhost:5432/sweety_db"
-JWT_SECRET="sweety_super_secret_jwt_key_min_32_characters_2026"
-NODE_ENV="development"
-PORT=5000
-```
-*(Note: If evaluating without a local PostgreSQL daemon running, set `USE_IN_MEMORY_DB=true` to preview all features immediately).*
+---
 
-### 3. Generate Prisma Client & Run Migrations
-```bash
-# Generate Prisma Client
-npm run prisma:generate
+## 🗄️ How to Set Up the Database
 
-# Apply migrations to PostgreSQL
-npm run prisma:migrate
+### Option A: Real PostgreSQL (Recommended for Production)
+1. Copy the example environment file:
+   ```bash
+   cp .env.example .env
+   ```
+2. Open `.env` and set your PostgreSQL connection string:
+   ```env
+   DATABASE_URL="postgresql://postgres:postgres@localhost:5432/sweety_db"
+   JWT_SECRET="sweety_super_secret_jwt_key_min_32_characters_for_production_safety_2026"
+   COOKIE_SECRET="sweety_cookie_security_secret_string_2026"
+   PORT=5000
+   NODE_ENV="development"
+   CLIENT_URL="http://localhost:5173"
+   ```
+3. Run migrations and seed sample data:
+   ```bash
+   # Generate Prisma client
+   npm run prisma:generate
 
-# Seed demo account and sample readings
-npm run prisma:seed
-```
+   # Apply migrations to your PostgreSQL database
+   npm run prisma:migrate
 
-### 4. Start Development Servers
-Run both backend Express server and Vite frontend simultaneously:
+   # Seed demo user (demo@sweety.app) with sample readings
+   npm run prisma:seed
+   ```
+
+### Option B: Automatic Offline Fallback (Zero Setup)
+If you don't have a PostgreSQL server running locally, SWEETY's database proxy will automatically detect it, log a notice, and switch to a pre-seeded in-memory store so you can evaluate the entire application immediately without installing PostgreSQL.
+
+---
+
+## 🚀 How to Run Server, Client, and Tests
+
+### 1. Run Development (Both Client & Server Together)
 ```bash
 npm run dev
 ```
-- Frontend: `http://localhost:5173`
-- Backend API: `http://localhost:5000`
+- **Frontend App:** [http://localhost:5173](http://localhost:5173)
+- **Backend API:** [http://localhost:5000](http://localhost:5000)
 
----
-
-## 🧪 Automated Testing Suite
-
-SWEETY features **35 comprehensive automated tests** verifying every requirement, validation rule, and edge case:
-
+### 2. Run Independently
 ```bash
-# Run all backend API and validation tests (28 tests)
+# Server only (port 5000)
+npm run dev:server
+
+# Client only (port 5173)
+npm run dev:client
+```
+
+### 3. Production Build & Start
+```bash
+# Compiles React SPA into client/dist and generates Prisma client
+npm run build
+
+# Starts the single-service Express server (serves API + static React SPA)
+npm start
+```
+
+### 4. Run Automated Tests
+```bash
+# Run all 28 backend integration & validation tests
 npm run test
 
-# Run frontend component and validation tests (7 tests)
+# Run all 7 frontend component & form tests
 npm run test:client
 ```
 
-### Test Coverage Highlights:
-- ✅ **Authentication**: Registration, duplicate email rejection (409), bcrypt hashing verification, login success, invalid password rejection (401), non-existent user rejection, profile retrieval, unauthorized request blocking.
-- ✅ **Reading Validation**: Missing glucose value, value < 40, value > 600, decimal values, future date prevention, duplicate slot rejection (`"You already have an After lunch reading for this date."`), 5th reading blocking (`"You can add only 4 readings per day."`).
-- ✅ **User Isolation**: Verification that User 2 cannot access, edit, or delete User 1's records.
-- ✅ **Editing & Deletion**: Modifying readings without self-duplication false positives, deletion confirmation flow.
-- ✅ **Reports**: Daily stats, Month-to-date range calculations, Previous-month retrospective, leap years, year rollover transitions, and required empty-state messages.
-- ✅ **Concurrency**: Atomic lock verification preventing concurrent requests from breaching the 4-reading daily limit.
-
----
-
-## 📡 REST API Reference
-
-### Authentication
-- `POST /api/auth/register` — Register a new account.
-- `POST /api/auth/login` — Sign in and receive HTTP-only session cookie.
-- `POST /api/auth/logout` — Clear session cookie.
-- `GET /api/auth/me` — Retrieve current authenticated user profile.
-
-### Readings Management (Protected)
-- `POST /api/readings` — Create a new glucose reading.
-- `GET /api/readings` — Retrieve readings with optional filtering (`?date=YYYY-MM-DD`).
-- `GET /api/readings/:id` — Retrieve a single reading by ID (user isolated).
-- `PUT /api/readings/:id` — Update reading value, slot, or date.
-- `DELETE /api/readings/:id` — Delete reading.
-
-### Reports (Protected)
-- `GET /api/reports/daily?date=YYYY-MM-DD` — Daily metrics and slot breakdown.
-- `GET /api/reports/month-to-date?date=YYYY-MM-DD` — Month-to-date metrics and trend data.
-- `GET /api/reports/monthly?date=YYYY-MM-DD` — Entire previous calendar month analysis.
-
-### System & Health
-- `GET /api/health` — Application and database connection status check.
-
----
-
-## 🚀 Live Railway Single-Service Deployment
-
-SWEETY is configured for turnkey deployment on [Railway](https://railway.app) as a single public web service with connected PostgreSQL.  
-*Detailed step-by-step instructions are available in [DEPLOYMENT.md](file:///c:/Users/chsiv/OneDrive/Desktop/kenpath_task/DEPLOYMENT.md).*
-
-### Production Build & Launch
+### 5. Run via Docker Compose
+To spin up a local PostgreSQL database container and the SWEETY web application together:
 ```bash
-# 1. Build the React frontend with Vite into client/dist
-npm run build
+docker-compose up --build
+```
+Access the application at [http://localhost:5000](http://localhost:5000).
 
-# 2. Apply migrations safely and launch Express
-npm run prisma:migrate
-npm run start
+---
+
+## 🧪 Automated Test Suite Summary (35/35 Passing)
+
+SWEETY includes 35 comprehensive tests covering all functional and security requirements:
+
+```
+✓ tests/reports.test.js   (8 tests) — Daily, MTD, Previous Month, leap year & year rollover
+✓ tests/auth.test.js      (9 tests) — Register, bcrypt hashing, login, logout, user profile
+✓ tests/readings.test.js (11 tests) — 5 validation rules, user isolation, CRUD, concurrency
+✓ src/test/auth.test.jsx  (3 tests) — Login form validation & auth context
+✓ src/test/readings.test.jsx (4 tests) — Reading modal validation, range checks, empty state
 ```
 
 ---
 
-## 📋 Kenpath Acceptance Checklist
+## 📝 Notes: Assumptions & Future Improvements
 
-| Requirement | Specification | Status | Evidence / Test |
-| :--- | :--- | :---: | :--- |
-| **User Registration** | Full name, email, password, confirm password | **PASS** | `auth.test.js` & `auth.test.jsx` |
-| **Login & Logout** | Email and password authentication with session cookies | **PASS** | `auth.test.js` |
-| **Bcrypt Hashing** | Passwords hashed using bcrypt (12 rounds) | **PASS** | `auth.test.js` (`should securely hash password with bcrypt`) |
-| **User Isolation** | Users can only access their own readings | **PASS** | `readings.test.js` (`User Isolation & Security`) |
-| **Add Reading** | Date, permitted slot, glucose value in mg/dL | **PASS** | `readings.test.js` & `readings.test.jsx` |
-| **View Reading** | Listing and single reading retrieval | **PASS** | `readings.test.js` |
-| **Edit Reading** | Edit value/slot without rejecting itself as duplicate | **PASS** | `readings.test.js` (`Edit & Delete Flows`) |
-| **Delete Reading** | Delete reading with confirmation modal | **PASS** | `readings.test.js` (`should allow deleting an existing reading`) |
-| **Permitted Slots** | Exactly 4 slots (Morning Fasting, Breakfast, Lunch, Dinner) | **PASS** | `readingValidator.js` & `readings.test.js` |
-| **Duplicate Slot Rule** | Only 1 reading per slot per day | **PASS** | `readings.test.js` (`should reject duplicate slot on same date`) |
-| **Max 4 Readings / Day** | Maximum 4 readings per day enforced under concurrency | **PASS** | `readings.test.js` & `concurrency` test |
-| **Whole Number Validation** | Whole number between 40 and 600 mg/dL | **PASS** | `readings.test.js` (`decimal`, `<40`, `>600`) |
-| **Future Date Prevention** | Date cannot be in the future | **PASS** | `readings.test.js` (`should reject date in the future`) |
-| **Daily Report** | Selected date only: High, Low, Avg rounded to 1 dec, Count, Slots | **PASS** | `reports.test.js` (`Daily Report`) |
-| **Month-to-Date Report** | 1st of month through selected date, trend, stats | **PASS** | `reports.test.js` (`Month-to-Date Report`) |
-| **Previous-Month Report** | Entire previous calendar month, trend, stats | **PASS** | `reports.test.js` (`Monthly Report (Previous Calendar Month)`) |
-| **Empty Report Message** | Exact required empty message | **PASS** | `reports.test.js` & `readings.test.jsx` |
-| **PostgreSQL Integration** | Real PostgreSQL database via Prisma ORM | **PASS** | `schema.prisma` & migration scripts |
-| **Database Seed Script** | Idempotent seed script with demo user & rich data | **PASS** | `server/prisma/seed.js` |
-| **Single Web Service** | Frontend dist served via Express on Railway | **PASS** | `server/src/app.js` & verified via probe |
-| **Automated Tests** | Backend + Frontend automated tests | **PASS** | 35/35 passing tests |
+### 💡 Assumptions Made During Development
+1. **Calendar Date Preservation (`YYYY-MM-DD`):**  
+   Glucose readings are anchored to patient calendar days, not UTC timestamps. Storing dates strictly as `YYYY-MM-DD` strings (`@db.VarChar(10)`) prevents timezone bugs, UTC midnight roll-backs, and daylight saving shifts.
+2. **Four Distinct Daily Slots:**  
+   The 4 slots (`Morning (fasting)`, `After breakfast`, `After lunch`, `After dinner`) represent distinct clinical intervals. A patient can log any slot in any order, but each slot can only be logged once per calendar date.
+3. **Concurrency-Safe Daily Limit:**  
+   To prevent race conditions where rapid clicks or simultaneous mobile/web requests exceed the 4-readings-per-day limit, an application-level mutex in `readingService.js` serializes writes per user/date alongside the database unique constraint (`@@unique([userId, date, slot])`).
+4. **Single-Service Cloud Deployment:**  
+   Express serves the compiled React Vite build from `client/dist` and handles SPA client-side routing fallback. This ensures the frontend and backend share the exact same origin in production, eliminating third-party cookie restrictions.
+
+### 🔮 What I'd Improve with More Time
+1. **Redis Caching for Historical Reports:**  
+   Implement a Redis cache layer for the Previous-Month report with automatic cache invalidation whenever a reading in that date range is added, updated, or deleted.
+2. **BullMQ Background Reminder Job:**  
+   Schedule an end-of-day background queue (e.g., at 9:00 PM) that scans for patients with fewer than 4 readings logged and triggers an email or web notification reminder.
+3. **Doctor / Caregiver Portal:**  
+   Add a role-based access control (RBAC) system allowing physicians to view their assigned patients' glucose curves, slot adherence, and average trends.
+4. **Clinical PDF Export:**  
+   Provide a one-click PDF export of the Monthly Report formatted for diabetes specialist consultations (HbA1c estimation and glycemic variability index).
+5. **Continuous Glucose Monitor (CGM) CSV Import:**  
+   Support batch CSV/JSON uploads from Abbott FreeStyle Libre or Dexcom devices with automatic mapping to the 4 daily slots.
 
 ---
 
-## ⚖️ Design Decisions & Assumptions
+## 📁 Repository Structure
 
-1. **Date-Only Storage Representation**: Calendar dates are strictly formatted and stored as `YYYY-MM-DD` strings (`@db.VarChar(10)`). This ensures 100% immunity from timezone conversions, UTC midnight shifts, and DST surprises.
-2. **Concurrency Strategy**: Enforced both at the database level (`@@unique([userId, date, slot])`) and through atomic transactional serialization in `readingService.js`, guaranteeing no race condition can ever create more than 4 readings per day.
-3. **Single-Service Architecture**: Configured Express to serve both API routes and the React SPA static build, minimizing infrastructure overhead and ensuring a unified origin for HTTP-only cookies.
+```
+Blood-Glucose-Tracker/
+├── client/                     # Frontend Application
+│   ├── src/
+│   │   ├── components/ui/      # Button, Input, Card, Modal, Badge, EmptyState, ErrorBoundary
+│   │   ├── context/            # AuthContext (JWT session management)
+│   │   ├── features/readings/  # AddEditReadingModal (validation & slots)
+│   │   ├── layouts/            # DashboardLayout (sidebar, header, mobile drawer)
+│   │   ├── pages/              # Dashboard, Readings, Daily, MTD, Previous Month, Profile
+│   │   ├── services/           # Axios api client, authService, readingService, reportService
+│   │   ├── test/               # React Testing Library test suites
+│   │   ├── utils/              # Timezone-safe calendar date helpers
+│   │   ├── App.jsx             # Protected / Public routing + ErrorBoundary
+│   │   └── main.jsx
+│   ├── vite.config.js
+│   ├── tailwind.config.js
+│   └── package.json
+│
+├── server/                     # Backend API Server
+│   ├── prisma/
+│   │   ├── schema.prisma       # User & Reading schema with relations and constraints
+│   │   ├── migrations/         # PostgreSQL migration files
+│   │   └── seed.js             # Idempotent demo database seed script
+│   ├── src/
+│   │   ├── config/             # env.js, database.js (Smart proxy & in-memory fallback)
+│   │   ├── controllers/        # auth, reading, report, health controllers
+│   │   ├── middleware/         # auth (JWT), validate (Zod), rateLimiter, errorHandler
+│   │   ├── routes/             # REST API routers (/api/auth, /api/readings, /api/reports)
+│   │   ├── services/           # authService, readingService, reportService
+│   │   ├── utils/              # dateUtils, response helpers
+│   │   ├── validators/         # Zod schemas with exact assignment error strings
+│   │   ├── app.js              # Express app, Helmet, CORS, SPA static fallback
+│   │   └── server.js           # Server startup, self-healing migration & graceful shutdown
+│   ├── tests/                  # Supertest backend integration test suites
+│   └── package.json
+│
+├── .env.example                # Documented environment variables template
+├── docker-compose.yml          # Local PostgreSQL + Web Service compose configuration
+├── Dockerfile                  # Multi-stage production container configuration
+├── render.yaml                 # Render Blueprint automated deployment manifest
+├── DEMO_WALKTHROUGH.md         # 2–3 minute video presentation script & guide
+├── package.json                # Root monorepo workspace configuration
+└── README.md                   # Complete assignment documentation
+```
 
 ---
 
-## 📄 License
-Developed for the Kenpath Technical Hiring Assignment.
-All rights reserved © 2026 SWEETY.
+## 📬 Submission Checklist
 
+- [x] **Public GitHub Repository:** [https://github.com/2200030440/Blood-Glucose-Tracker.git](https://github.com/2200030440/Blood-Glucose-Tracker.git)
+- [x] **Live Deployed Application:** [https://sweety-app.onrender.com](https://sweety-app.onrender.com)
+- [x] **Regular Commit History:** Distinct semantic commits across architecture, backend, frontend, testing, and deployment.
+- [x] **Comprehensive `README.md`:** Installation, database setup, running server/client/tests, and Notes section.
+- [x] **`.env.example`:** Documented environment template with no exposed secrets.
+- [x] **Database Seed Script:** `server/prisma/seed.js` creating `demo@sweety.app` with sample readings.
+- [x] **Screen Recording Script:** Pre-scripted 2–3 minute video demonstration in [`DEMO_WALKTHROUGH.md`](DEMO_WALKTHROUGH.md).
+
+---
+
+**Developed with 💜 by Challagali** for the Kenpath Technical Hiring Assignment.
