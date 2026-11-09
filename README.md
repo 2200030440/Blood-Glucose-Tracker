@@ -240,12 +240,20 @@ npm run test:client
 
 ---
 
-## 🏗️ Architecture & Engineering Highlights
+## 📝 Notes: Assumptions & Future Improvements
 
-1. **Date-Only Storage Representation:** Calendar dates are strictly formatted and stored as `YYYY-MM-DD` strings (`@db.VarChar(10)`). This ensures 100% immunity from timezone conversions, UTC midnight shifts, and DST changes.
-2. **Concurrency Integrity:** Combines database unique constraints (`@@unique([userId, date, slot])`) with application-level mutex locking in `readingService.js`, guaranteeing no race condition can ever exceed 4 readings per day.
-3. **Single Public Web Service Architecture:** Express serves the compiled React Vite build from `client/dist` and handles SPA client-side routing fallback. This ensures the frontend and backend share the exact same origin in production, eliminating third-party cookie restrictions.
-4. **Self-Healing Database Proxy:** Automatically applies Prisma migrations and seeds demo data on boot, falling back seamlessly to an in-memory store if the database connection is interrupted.
+### Assumptions Made
+1. **Calendar Date Preservation (`YYYY-MM-DD`):** Stored strictly as `YYYY-MM-DD` strings (`@db.VarChar(10)`) to maintain timezone safety across international patient use and eliminate UTC midnight rollover anomalies.
+2. **Four Distinct Daily Slots:** The 4 slots (`Morning (fasting)`, `After breakfast`, `After lunch`, `After dinner`) represent distinct clinical intervals. Each slot can be recorded once per calendar date, up to 4 readings per day.
+3. **Concurrency-Safe Daily Limit:** Combined database unique constraints (`@@unique([userId, date, slot])`) with application-level mutex locking in `readingService.js` to ensure concurrent parallel requests cannot bypass the 4-readings-per-day limit.
+4. **Single-Service Architecture:** Serving both the API and the compiled React SPA build from the same Express origin in production eliminates third-party cookie restrictions and simplifies deployment on cloud platforms.
+
+### What I'd Improve with More Time
+1. **Redis Caching for Historical Reports:** Cache Monthly and Month-to-Date analytics in Redis with automatic invalidation whenever a reading in that range is added, modified, or deleted.
+2. **BullMQ Background Reminder Job:** Schedule an automated daily reminder job (e.g., at 9:00 PM) to notify patients who have fewer than 4 readings logged for the day.
+3. **Doctor / Caregiver Role:** Implement a multi-tenant role-based access control (RBAC) portal allowing physicians to review glucose charts, trends, and slot compliance for their assigned patients.
+4. **Clinical PDF & CSV Export:** Provide one-click report exports formatted for diabetes specialist consultations and endocrinology visits.
+5. **Continuous Glucose Monitor (CGM) Import:** Add support for importing batch CSV/JSON data from Abbott FreeStyle Libre or Dexcom sensors with automatic slot mapping.
 
 ---
 
