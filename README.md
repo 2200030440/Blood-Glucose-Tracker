@@ -11,7 +11,7 @@
 
 | Metric | Details |
 | :--- | :--- |
-| 🚀 **Live App URL** | **[https://sweety-app.onrender.com](https://sweety-app.onrender.com)** |
+| 🚀 **Live App URL** | **[https://blood-glucose-tracker-vjbp.onrender.com](https://blood-glucose-tracker-vjbp.onrender.com)** |
 | 🛡️ **Infrastructure** | Render (Single Public Web Service + Managed PostgreSQL Database + SSL) |
 | 🔑 **Demo Account** | **`demo@sweety.app`** |
 | 🔒 **Demo Password** | **`SweetyDemo@123`** |
